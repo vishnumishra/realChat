@@ -1,0 +1,242 @@
+<html ng-app="home">
+  <head>
+	<title>Real Time Private Chatting : Codershood</title>
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/style.css"> 
+	<link rel="stylesheet" href="angularjs-toaster/toaster.min.css" />
+
+  </head>
+  <body ng-controller="home">    
+	<div class="body">
+	  
+		<div class="rows">
+
+			<div class="col-md-8 msg-wrapper">
+
+				<!-- 
+					Showing person's name who is Chatting with the  users Starts
+				-->
+				<div class="msg-wrapper-header">
+					<div class="chat-user-meta">
+				  		<span class="user-name">{{send_to_user_name=='' ? 'Select User to Chat': send_to_user_name}} </span>
+					</div>
+			  	</div>
+			  	<!-- 
+					Showing person's name who is Chatting with the  users Ends
+				-->
+			  	
+			  	<div class="msg-wrapper-body">
+			  		<!-- 
+						Displaying messages to user when users Starts
+					-->
+					<div class="msg-container" id="msg-container">
+				  		<div class="msg-single" ng-repeat="msg_data in msgs"  
+							ng-style="{
+						  		'float': uid==msg_data.to_id ? 'left' :'right'
+							}">
+					  		<div class="msg-conatiner">
+								<div class="actual-msg">{{msg_data.msg}}</div>
+								<span class="msg-meta">{{msg_data.timestamp*1000 | date}}</span>
+					  		</div>
+				  		</div> 
+					</div>
+					<!-- 
+						Displaying messages to user when users Ends
+					-->
+
+					<!-- 
+						Message box to send messages Starts
+					-->
+					<div class="send-container">
+				 		<textarea class="form-control send-msg-text" ng-model='send_text' send-typing-notification placeholder="Type your message here" ></textarea>
+				  		<h1 class="send-btn" ng-click="send_msg('','','')"><span class="glyphicon glyphicon-send"></span></h1>
+					</div>
+					<!-- 
+						Message box to send messages Ends
+					-->				
+			  	</div>
+			</div>
+			
+			<div class="col-md-4  list-wrapper">
+
+				<!-- 
+					Display Chat list for user starts
+				-->	
+				<div class="col-md-12 list-wrapper-header">
+
+					<!-- 
+						Displaying profile Image
+					-->	
+					<div class="profile_pic">
+						<img class="img-circle" ng-src="{{show_userinfo.data.p_photo}}">
+					</div>
+					<!-- 
+						Link for modal and for Logout starts
+					-->	
+					<div class="icon-set">
+						<a Title="Start New chat" ng-click='get_users_to_chats()' data-toggle="modal" data-target="#myModal">
+							<span class="glyphicon glyphicon-plus"></span>
+						</a>
+						<a Title="Logout" href="/logout">
+							<span class="glyphicon glyphicon-off"></span>
+						</a>
+					</div>
+					<!-- 
+						Link for modal and for Logout ends
+					-->	
+
+					<!-- 
+						Showing online status
+					-->	
+					<div class="user-meta">
+						<span class="user-name">{{show_userinfo.data.name}}</span>
+						<span class="user-status">{{show_userinfo.data.online=='Y' ? 'Online': 'Offline' }}</span>
+					</div>
+				</div>
+
+				<!-- 
+					Displaying chat list starts
+				-->	
+				<div class="userlist">
+
+					<!-- 
+						Using ng-repeat to show users starts
+					-->	
+					<div class="userlist-single" ng-repeat="singleuser in userlist"
+						ng-click="hightlight_user(singleuser)"
+					  	ng-class="(hightlight_id==singleuser.id ? 'hightlight_user_class' :'')"
+					  	ng-style="{
+							'display': uid==singleuser.id ? 'none' :''
+						}">
+						<!-- 
+							Showing users name, profile Image and online status  
+						-->	
+						<div class="userlist-user-meta">
+							<img class="img-circle" ng-src="{{singleuser.p_photo}}"/>
+								<span class="online-user-status"
+						  			ng-class="(singleuser.online=='Y' ? 'status-online' :'status-offline')"
+								></span>
+							<span title="{{singleuser.socketId}}" class="userlist-userName">{{singleuser.name}}</span>
+							<!-- 
+								Span to show 'Typing indicator'  
+							-->	
+							<span id="isTyping_{{singleuser.id}}" class="is-typing">is typing...</span>
+						</div>				  
+					</div>
+					<!-- 
+						Using ng-repeat to show users ends
+					-->	
+
+					<!-- 
+						Showing alert when no user avalibale for chat
+					-->	
+					<div ng-show="userlist.length == 1 && userlist[0].name==show_userinfo.data.name"  >
+						<div class="alert alert-danger" >
+						  <p class="text-center" >
+							Everyone is offline.
+							<br/><br/>
+							Share this url and Tell your friends to come online.
+						  </p >
+						</div >
+					</div>
+
+				</div>
+				<!-- 
+					Displaying chat list ends
+				-->	
+			</div>
+		</div>
+	</div>
+
+	<!-- 
+		HTML element for shwoing toaster notification starts
+	-->	
+	<toaster-container></toaster-container>
+	<!-- 
+		HTML element for shwoing toaster notification ends
+	-->
+
+	<!-- 
+		Bootstrap modal starts
+	-->
+	<div id="myModal" class="modal fade" role="dialog">
+		<div class="modal-dialog">
+
+		<!-- Modal content starts-->
+		<div class="modal-content">
+			
+			<!-- Modal header starts-->
+			<div class="modal-header">
+				<a type="button" class="close" data-dismiss="modal">&times;</a>
+				<p class="modal-title">Start new chat</p>
+			</div>
+			<!-- Modal header ends-->
+		  
+
+			<!-- Modal Body starts-->
+			<div class="modal-body">
+			
+				<!-- 
+					Displaying start new chat list starts
+				-->	
+				<div class="newChat" ng-repeat="singleOfflineUser in RecentUserList" 
+					ng-class="(hightlight_id==singleOfflineUser.id ? 'hightlight_user_class' :'')"
+					id='modal_user_{{singleOfflineUser.id}}'
+					>
+
+					<div class="userlist-user-meta">
+						<!-- 
+							Displaying User details starts
+						-->						
+						<div class="newChat-user-meta">
+							<img class="img-circle" ng-src="{{singleOfflineUser.p_photo}}">                    
+							<span class="userlist-userName">{{singleOfflineUser.name}}</span>
+							<span class="send-msg-offline sendButton{{singleOfflineUser.id}}">
+								<span class="glyphicon glyphicon-plus showMSgBox_{{singleOfflineUser.id}}" ng-click="hideShowMsgBox(singleOfflineUser.id,'show',$event)"></span>
+								<span class="glyphicon glyphicon-minus hideMsgBox_{{singleOfflineUser.id}} send-msg-hidden" ng-click="hideShowMsgBox(singleOfflineUser.id,'hide',$event)"></span>
+							</span>
+						</div>
+						<!-- 
+							Displaying User details ends
+						-->	                    
+						
+						<!-- 
+							text box to send messages starts 
+						-->	
+						<div class="send-msg-offline-text send-msg-hidden collapseMsgBox_{{singleOfflineUser.id}}">
+							<textarea id="msg_modal_{{singleOfflineUser.id}}" class="form-control" ng-model='send_text' placeholder="Type your message here"></textarea>
+							<button class="btn btn-primary newChat-send-mesaage" data-dismiss="modal" ng-click="send_msg('fromModal','',singleOfflineUser.id)">
+								send message
+							</button>                        
+						</div>
+						<!-- 
+							text box to send messages starts 
+						-->						
+					</div>
+				</div>	
+				<!-- 
+					Displaying start new chat list ends
+				-->	
+								
+		  	</div>
+		  	<!-- Modal Body ends-->
+
+		</div>
+		<!-- Modal content ends-->
+	  </div>
+	</div>
+	<!-- 
+		Bootstrap modal starts
+	-->
+
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src = "js/angular.min.js"></script>
+	<script type="text/javascript" src="js/angular-animate.min.js" ></script>
+	<script type="text/javascript" src="angularjs-toaster/toaster.min.js"></script>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src ="js/home_script.js"></script>
+
+  </body>
+</html>
